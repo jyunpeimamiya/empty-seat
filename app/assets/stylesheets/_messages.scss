@@ -1,0 +1,287 @@
+* {
+  box-sizing: border-box;
+  background-image: url("https://deltaworks.info/images/2019/01/26/DSCF0646-Edit-Edit.jpg");
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+  overflow: hidden;
+}
+
+
+
+.side-bar{
+  height: 100vh;
+  width: 250px;
+  float: left;
+  background-color: red;
+  &__user-name{
+    height: 100px;
+    width: 250px;
+    display: flex;
+    align-items: center;
+    background-color: green;
+    &__top-items{
+      display: flex;
+      height: 40px;
+      width: 100%;
+      justify-content: space-between;
+      background-color: blue;
+      &__name{
+        height: 40px;
+        font-size: 25px;
+        margin: 0 auto;
+        color: blanchedalmond;
+        
+      }
+      &__icons{
+        height: 40px;
+        text-align:center;
+        color:whitesmoke;
+        display: flex;
+        li{
+          a{
+            color:white;
+          }
+        }
+
+      }
+   }
+}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+.main-bar{
+  height: 100vh;
+  width: calc(100vw - 250px);
+  float: left;
+  &__top{
+    height: calc(100% / 3) ;
+    display: flex;
+    justify-content: space-between;
+    &__table-one{
+      border: solid 3px white;
+      height: 100px;
+      width: 300px;
+      margin-top: 70px;
+      margin-left: 200px;
+      &__up{
+        height: 47px;
+        width: 300px;
+        button{
+          width: calc(100% / 5);
+          height: 40px;
+          border: 1px solid #ccc;
+          background-color: white;
+          color: whitesmoke;
+          margin-left: 8px;
+        }
+      }
+      &__under{
+        height: 47px;
+        width: 300px;
+        button{
+          width: calc(100% / 5);
+          height: 40px;
+          border: 1px solid #ccc;
+          background-color: white;
+          color: whitesmoke;
+          margin-left: 8px;
+        }
+        
+      }
+     
+      
+      
+      
+      }
+    &__table-two{
+      border: solid 3px white;
+      height: 100px;
+      width: 300px;
+      margin-right: 200px;
+      margin-top: 70px;
+      &__up{
+        height: 47px;
+        width: 300px;
+        button{
+          width: calc(100% / 5);
+          height: 40px;
+          border: 1px solid #ccc;
+          background-color: white;
+          color: whitesmoke;
+          margin-left: 8px;
+        }
+      }
+      &__under{
+        height: 47px;
+        width: 300px;
+        button{
+          width: calc(100% / 5);
+          height: 40px;
+          border: 1px solid #ccc;
+          background-color: white;
+          color: whitesmoke;
+          margin-left: 8px;
+        }
+        
+      }
+      
+    }
+  }
+  &__center{
+    height: calc(100% / 3) ;
+    display: flex;
+    justify-content: space-between;
+    
+    &__table-three{
+      border: solid 3px white;
+      height: 100px;
+      width: 300px;
+      margin-left: 200px;
+      margin-top: 70px;
+      &__up{
+        height: 47px;
+        width: 300px;
+        button{
+          width: calc(100% / 5);
+          height: 40px;
+          border: 1px solid #ccc;
+          background-color: white;
+          color: whitesmoke;
+          margin-left: 8px;
+        }
+      }
+      &__under{
+        height: 47px;
+        width: 300px;
+        button{
+          width: calc(100% / 5);
+          height: 40px;
+          border: 1px solid #ccc;
+          background-color: white;
+          color: whitesmoke;
+          margin-left: 8px;
+        }
+        
+      }
+    }
+    &__table-four{
+      border: solid 3px white;
+      height: 100px;
+      width: 300px;
+      margin-right: 200px;
+      margin-top: 70px;
+      &__up{
+        height: 47px;
+        width: 300px;
+        button{
+          width: calc(100% / 5);
+          height: 40px;
+          border: 1px solid #ccc;
+          background-color: white;
+          color: whitesmoke;
+          margin-left: 8px;
+        }
+      }
+      &__under{
+        height: 47px;
+        width: 300px;
+        button{
+          width: calc(100% / 5);
+          height: 40px;
+          border: 1px solid #ccc;
+          background-color: white;
+          color: whitesmoke;
+          margin-left: 8px;
+        }
+        
+      }
+    }
+
+  }
+  &__bottom{
+    height: calc(100% / 3) ;
+    display: flex;
+    justify-content: space-between;
+    
+    &__table-five{
+      border: solid 3px white;
+      height: 100px;
+      width: 300px;
+      margin-left: 200px;
+      margin-top: 70px;
+
+      &__up{
+        height: 47px;
+        width: 300px;
+        button{
+          width: calc(100% / 5);
+          height: 40px;
+          border: 1px solid #ccc;
+          background-color: white;
+          color: whitesmoke;
+          margin-left: 8px;
+        }
+      }
+      &__under{
+        height: 47px;
+        width: 300px;
+        button{
+          width: calc(100% / 5);
+          height: 40px;
+          border: 1px solid #ccc;
+          background-color: white;
+          color: whitesmoke;
+          margin-left: 8px;
+        }
+        
+      }
+    }
+    &__table-six{
+      border: solid 3px white;
+      height: 100px;
+      width: 300px;
+      margin-right: 200px;
+      margin-top: 70px;
+      &__up{
+        height: 47px;
+        width: 300px;
+        button{
+          width: calc(100% / 5);
+          height: 40px;
+          border: 1px solid #ccc;
+          background-color: white;
+          color: whitesmoke;
+          margin-left: 8px;
+        }
+      }
+      &__under{
+        height: 47px;
+        width: 300px;
+        button{
+          width: calc(100% / 5);
+          height: 40px;
+          border: 1px solid #ccc;
+          background-color: white;
+          color: whitesmoke;
+          margin-left: 8px;
+        }
+        
+      }
+    }
+  }
+
+
+}
+
