@@ -7,31 +7,25 @@
   overflow: hidden;
 }
 
-
-
 .side-bar{
   height: 100vh;
   width: 250px;
   float: left;
-  background-color: red;
   &__user-name{
     height: 100px;
     width: 250px;
     display: flex;
     align-items: center;
-    background-color: green;
     &__top-items{
       display: flex;
       height: 40px;
       width: 100%;
       justify-content: space-between;
-      background-color: blue;
       &__name{
         height: 40px;
         font-size: 25px;
         margin: 0 auto;
         color: blanchedalmond;
-        
       }
       &__icons{
         height: 40px;
@@ -43,23 +37,54 @@
             color:white;
           }
         }
-
       }
-   }
+    }
+  }
+  &__group{
+    height: calc(100vh - 100px);
+    width: 250px;
+    &__message{
+      height: 150px;
+      margin-top: 100px;
+    
+      &__up{
+        height: 75px;
+        display: flex;
+        &__red{
+          height: 20px;
+          width: 20px;
+          margin-top: 10px;
+          margin-left: 10px;
+          border: solid 3px red;
+        }
+        &__not-empty{
+          margin-top: 10px;
+          height: 20px;
+          width: 230px;
+          color: red;
+        }
+      }
+
+      &__under{
+        height: 75px;
+        display: flex;
+        &__white{
+          height: 20px;
+          width: 20px;
+          margin-top: 10px;
+          margin-left: 10px;
+          border: solid 3px white;
+        }
+        &__empty{
+          margin-top: 10px;
+          height: 20px;
+          width: 230px;
+          color: white;
+        }
+      }
+    }
+  }
 }
-
-}
-
-
-
-
-
-
-
-
-
-
-
 
 .main-bar{
   height: 100vh;
@@ -78,12 +103,10 @@
       &__up{
         height: 47px;
         width: 300px;
-        button{
+        input{
           width: calc(100% / 5);
           height: 40px;
-          border: 1px solid #ccc;
-          background-color: white;
-          color: whitesmoke;
+          color:whitesmoke;
           margin-left: 8px;
         }
       }
@@ -93,17 +116,10 @@
         button{
           width: calc(100% / 5);
           height: 40px;
-          border: 1px solid #ccc;
-          background-color: white;
           color: whitesmoke;
           margin-left: 8px;
         }
-        
       }
-     
-      
-      
-      
       }
     &__table-two{
       border: solid 3px white;
@@ -117,8 +133,6 @@
         button{
           width: calc(100% / 5);
           height: 40px;
-          border: 1px solid #ccc;
-          background-color: white;
           color: whitesmoke;
           margin-left: 8px;
         }
@@ -129,14 +143,10 @@
         button{
           width: calc(100% / 5);
           height: 40px;
-          border: 1px solid #ccc;
-          background-color: white;
           color: whitesmoke;
           margin-left: 8px;
         }
-        
       }
-      
     }
   }
   &__center{
@@ -156,8 +166,6 @@
         button{
           width: calc(100% / 5);
           height: 40px;
-          border: 1px solid #ccc;
-          background-color: white;
           color: whitesmoke;
           margin-left: 8px;
         }
@@ -168,12 +176,9 @@
         button{
           width: calc(100% / 5);
           height: 40px;
-          border: 1px solid #ccc;
-          background-color: white;
           color: whitesmoke;
           margin-left: 8px;
         }
-        
       }
     }
     &__table-four{
@@ -188,8 +193,6 @@
         button{
           width: calc(100% / 5);
           height: 40px;
-          border: 1px solid #ccc;
-          background-color: white;
           color: whitesmoke;
           margin-left: 8px;
         }
@@ -200,15 +203,11 @@
         button{
           width: calc(100% / 5);
           height: 40px;
-          border: 1px solid #ccc;
-          background-color: white;
           color: whitesmoke;
           margin-left: 8px;
         }
-        
       }
     }
-
   }
   &__bottom{
     height: calc(100% / 3) ;
@@ -228,8 +227,6 @@
         button{
           width: calc(100% / 5);
           height: 40px;
-          border: 1px solid #ccc;
-          background-color: white;
           color: whitesmoke;
           margin-left: 8px;
         }
@@ -240,12 +237,9 @@
         button{
           width: calc(100% / 5);
           height: 40px;
-          border: 1px solid #ccc;
-          background-color: white;
           color: whitesmoke;
           margin-left: 8px;
         }
-        
       }
     }
     &__table-six{
@@ -260,8 +254,6 @@
         button{
           width: calc(100% / 5);
           height: 40px;
-          border: 1px solid #ccc;
-          background-color: white;
           color: whitesmoke;
           margin-left: 8px;
         }
@@ -272,16 +264,11 @@
         button{
           width: calc(100% / 5);
           height: 40px;
-          border: 1px solid #ccc;
-          background-color: white;
           color: whitesmoke;
           margin-left: 8px;
         }
-        
       }
     }
   }
-
-
 }
 
