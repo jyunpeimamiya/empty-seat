@@ -7,7 +7,20 @@
         %li.side-bar__user-name__top-items__edit
           = link_to edit_user_path(current_user) do
             = icon('fas', 'edit')
- 
+  .side-bar__group
+    .side-bar__group__message
+      .side-bar__group__message__up
+        .side-bar__group__message__up__red
+        .side-bar__group__message__up__not-empty
+          ・・・使用中
+      .side-bar__group__message__under
+        .side-bar__group__message__under__white
+        .side-bar__group__message__under__empty
+          ・・・空席
+      
+
+
+
 
 
 
