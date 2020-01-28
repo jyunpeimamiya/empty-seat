@@ -2,14 +2,14 @@
   .main-bar__top
     .main-bar__top__table-one
       .main-bar__top__table-one__up
-        %input#tweive{type: "button", value: "12", class:"btn"}
+        %input#tweive{type: "button", value: "12", class:"btn", onclick: "Color()"}
           
         %input#eleven{type: "button", value: "11", class:"btn"}
       
-        %button#ten{type: "button"}
-          =10
-        %button#nine{type: "button"}
-          =9
+        %input#ten{type: "button", value: "10", class:"btn"}
+        
+        %input#nine{type: "button", value: "9"}
+  
       .main-bar__top__table-one__under
         %button#sixteen{type: "button"}
           =16
@@ -118,7 +118,3 @@
           =38
         %button#thirty-seven{type: "button"}
           =37
-
-
-  
-

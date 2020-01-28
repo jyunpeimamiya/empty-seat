@@ -1,325 +1,656 @@
-var lifecycle = {
-	teardown: function () {
-		$.cookie.defaults = {};
-		delete $.cookie.raw;
-		delete $.cookie.json;
-		$.each($.cookie(), $.removeCookie);
-	}
-};
+/* global Cookies, QUnit, lifecycle, quoted */
 
+QUnit.module('setup', lifecycle)
 
-module('read', lifecycle);
+QUnit.test('api instance creation', function (assert) {
+  assert.expect(4)
 
-test('simple value', function () {
-	expect(1);
-	document.cookie = 'c=v';
-	strictEqual($.cookie('c'), 'v', 'should return value');
-});
+  var api
 
-test('empty value', function () {
-	expect(1);
-	// IE saves cookies with empty string as "c; ", e.g. without "=" as opposed to EOMB, which
-	// resulted in a bug while reading such a cookie.
-	$.cookie('c', '');
-	strictEqual($.cookie('c'), '', 'should return value');
-});
+  api = Cookies.withAttributes({ path: '/bar' })
+  assert.ok(
+    api.set('c', 'v').match(/c=v; path=\/bar/),
+    'should set up default cookie attributes'
+  )
+  api = Cookies.withAttributes({ sameSite: 'Lax' })
+  assert.notOk(
+    api.set('c', 'v').match(/c=v; path=\/bar/),
+    'should set up cookie attributes each time from original'
+  )
 
-test('not existing', function () {
-	expect(1);
-	strictEqual($.cookie('whatever'), undefined, 'return undefined');
-});
+  api = Cookies.withConverter({
+    write: function (value, name) {
+      return value.toUpperCase()
+    }
+  }).withAttributes({ path: '/foo' })
+  assert.ok(
+    api.set('c', 'v').match(/c=V; path=\/foo/),
+    'should allow setting up converters followed by default cookie attributes'
+  )
 
-test('RFC 2068 quoted string', function () {
-	expect(1);
-	document.cookie = 'c="v@address.com\\"\\\\\\""';
-	strictEqual($.cookie('c'), 'v@address.com"\\"', 'should decode RFC 2068 quoted string');
-});
+  api = Cookies.withAttributes({ path: '/foo' }).withConverter({
+    write: function (value, name) {
+      return value.toUpperCase()
+    }
+  })
+  assert.ok(
+    api.set('c', 'v').match(/c=V; path=\/foo/),
+    'should allow setting up default cookie attributes followed by converter'
+  )
+})
 
-test('decode', function () {
-	expect(1);
-	document.cookie = encodeURIComponent(' c') + '=' + encodeURIComponent(' v');
-	strictEqual($.cookie(' c'), ' v', 'should decode key and value');
-});
+QUnit.test('api instance with attributes', function (assert) {
+  assert.expect(3)
 
-test('decode pluses to space for server side written cookie', function () {
-	expect(1);
-	document.cookie = 'c=foo+bar';
-	strictEqual($.cookie('c'), 'foo bar', 'should convert pluses back to space');
-});
+  // Create a new instance so we don't affect remaining tests...
+  var api = Cookies.withAttributes({ path: '/' })
 
-test('raw = true', function () {
-	expect(2);
-	$.cookie.raw = true;
+  delete api.attributes
+  assert.ok(api.attributes, "won't allow to delete property")
 
-	document.cookie = 'c=%20v';
-	strictEqual($.cookie('c'), '%20v', 'should not decode value');
+  api.attributes = {}
+  assert.ok(api.attributes.path, "won't allow to reassign property")
 
-	// see https://github.com/carhartl/jquery-cookie/issues/50
-	$.cookie('c', 'foo=bar');
-	strictEqual($.cookie('c'), 'foo=bar', 'should include the entire value');
-});
+  api.attributes.path = '/foo'
+  assert.equal(
+    api.attributes.path,
+    '/',
+    "won't allow to reassign contained properties"
+  )
+})
 
-test('json = true', function () {
-	expect(1);
+QUnit.test('api instance with converter', function (assert) {
+  assert.expect(3)
 
-	if ('JSON' in window) {
-		$.cookie.json = true;
-		$.cookie('c', { foo: 'bar' });
-		deepEqual($.cookie('c'), { foo: 'bar' }, 'should parse JSON');
-	} else {
-		ok(true);
-	}
-});
+  var readConverter = function (value) {
+    return value.toUpperCase()
+  }
 
-test('not existing with json = true', function () {
-	expect(1);
+  // Create a new instance so we don't affect remaining tests...
+  var api = Cookies.withConverter({
+    read: readConverter
+  })
 
-	if ('JSON' in window) {
-		$.cookie.json = true;
-		strictEqual($.cookie('whatever'), undefined, "won't throw exception");
-	} else {
-		ok(true);
-	}
-});
+  delete api.converter
+  assert.ok(api.converter, "won't allow to delete property")
 
-test('string with json = true', function () {
-	expect(1);
+  api.converter = {}
+  assert.ok(api.converter.read, "won't allow to reassign property")
 
-	if ('JSON' in window) {
-		$.cookie.json = true;
-		$.cookie('c', 'v');
-		strictEqual($.cookie('c'), 'v', 'should return value');
-	} else {
-		ok(true);
-	}
-});
+  api.converter.read = function () {}
+  assert.equal(
+    api.converter.read.toString(),
+    readConverter.toString(),
+    "won't allow to reassign contained properties"
+  )
+})
 
-test('invalid JSON string with json = true', function () {
-	expect(1);
+QUnit.module('read', lifecycle)
 
-	if ('JSON' in window) {
-		$.cookie('c', 'v');
-		$.cookie.json = true;
-		strictEqual($.cookie('c'), undefined, "won't throw exception, returns undefined");
-	} else {
-		ok(true);
-	}
-});
+QUnit.test('simple value', function (assert) {
+  assert.expect(1)
+  document.cookie = 'c=v'
+  assert.strictEqual(Cookies.get('c'), 'v', 'should return value')
+})
 
-test('invalid URL encoding', function () {
-	expect(1);
-	document.cookie = 'bad=foo%';
-	strictEqual($.cookie('bad'), undefined, "won't throw exception, returns undefined");
-	// Delete manually here because it requires raw === true...
-	$.cookie.raw = true;
-	$.removeCookie('bad');
-});
+QUnit.test('empty value', function (assert) {
+  assert.expect(1)
+  // IE saves cookies with empty string as "c; ", e.g. without "=" as opposed to EOMB, which
+  // resulted in a bug while reading such a cookie.
+  Cookies.set('c', '')
+  assert.strictEqual(Cookies.get('c'), '', 'should return value')
+})
 
-asyncTest('malformed cookie value in IE (#88, #117)', function () {
-	expect(1);
-	// Sandbox in an iframe so that we can poke around with document.cookie.
-	var iframe = $('<iframe src="malformed_cookie.html"></iframe>')[0];
-	$(iframe).on('load', function () {
-		start();
-		if (iframe.contentWindow.ok) {
-			strictEqual(iframe.contentWindow.testValue, 'two', 'reads all cookie values, skipping duplicate occurences of "; "');
-		} else {
-			// Skip the test where we can't stub document.cookie using
-			// Object.defineProperty. Seems to work fine in
-			// Chrome, Firefox and IE 8+.
-			ok(true, 'N/A');
-		}
-	});
-	document.body.appendChild(iframe);
-});
+QUnit.test('not existing', function (assert) {
+  assert.expect(1)
+  assert.strictEqual(Cookies.get('whatever'), undefined, 'return undefined')
+})
 
-test('Call to read all when there are cookies', function () {
-	$.cookie('c', 'v');
-	$.cookie('foo', 'bar');
-	deepEqual($.cookie(), { c: 'v', foo: 'bar' }, 'returns object containing all cookies');
-});
+// github.com/carhartl/jquery-cookie/issues/50
+QUnit.test('equality sign in cookie value', function (assert) {
+  assert.expect(1)
+  Cookies.set('c', 'foo=bar')
+  assert.strictEqual(
+    Cookies.get('c'),
+    'foo=bar',
+    'should include the entire value'
+  )
+})
 
-test('Call to read all when there are no cookies at all', function () {
-	deepEqual($.cookie(), {}, 'returns empty object');
-});
+// github.com/carhartl/jquery-cookie/issues/215
+QUnit.test('percent character in cookie value', function (assert) {
+  assert.expect(1)
+  document.cookie = 'bad=foo%'
+  assert.strictEqual(
+    Cookies.get('bad'),
+    'foo%',
+    'should read the percent character'
+  )
+})
 
-test('Call to read all with json: true', function () {
-	$.cookie.json = true;
-	$.cookie('c', { foo: 'bar' });
-	deepEqual($.cookie(), { c: { foo: 'bar' } }, 'returns JSON parsed cookies');
-});
+QUnit.test(
+  'unencoded percent character in cookie value mixed with encoded values not permitted',
+  function (assert) {
+    assert.expect(1)
+    document.cookie = 'bad=foo%bar%22baz%qux'
+    assert.strictEqual(Cookies.get('bad'), undefined, 'should skip reading')
+    document.cookie = 'bad=foo; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+  }
+)
 
-test('Call to read all with a badly encoded cookie', function () {
-	expect(1);
-	document.cookie = 'bad=foo%';
-	document.cookie = 'good=foo';
-	deepEqual($.cookie(), { good: 'foo' }, 'returns object containing all decodable cookies');
-	// Delete manually here because it requires raw === true...
-	$.cookie.raw = true;
-	$.removeCookie('bad');
-});
+QUnit.test('lowercase percent character in cookie value', function (assert) {
+  assert.expect(1)
+  document.cookie = 'c=%d0%96'
+  assert.strictEqual(
+    Cookies.get('c'),
+    'Ж',
+    'should decode percent characters case insensitive'
+  )
+})
 
+// github.com/js-cookie/js-cookie/pull/171
+QUnit.test('missing leading semicolon', function (assert) {
+  assert.expect(1)
+  var done = assert.async()
+  var iframe = document.createElement('iframe')
+  iframe.src = 'missing_semicolon.html'
+  iframe.addEventListener('load', function () {
+    assert.ok(
+      iframe.contentWindow.__ok,
+      'concatenate with 3rd party script without error'
+    )
+    done()
+  })
+  document.body.appendChild(iframe)
+})
 
-module('write', lifecycle);
+QUnit.test('Call to read all when there are cookies', function (assert) {
+  Cookies.set('c', 'v')
+  Cookies.set('foo', 'bar')
+  assert.deepEqual(
+    Cookies.get(),
+    { c: 'v', foo: 'bar' },
+    'returns object containing all cookies'
+  )
+})
 
-test('String primitive', function () {
-	expect(1);
-	$.cookie('c', 'v');
-	strictEqual($.cookie('c'), 'v', 'should write value');
-});
+QUnit.test('Call to read all when there are no cookies at all', function (
+  assert
+) {
+  assert.deepEqual(Cookies.get(), {}, 'returns empty object')
+})
 
-test('String object', function () {
-	expect(1);
-	$.cookie('c', new String('v'));
-	strictEqual($.cookie('c'), 'v', 'should write value');
-});
+QUnit.test('RFC 6265 - reading cookie-octet enclosed in DQUOTE', function (
+  assert
+) {
+  assert.expect(1)
+  document.cookie = 'c="v"'
+  assert.strictEqual(
+    Cookies.get('c'),
+    'v',
+    'should simply ignore quoted strings'
+  )
+})
 
-test('value "[object Object]"', function () {
-	expect(1);
-	$.cookie('c', '[object Object]');
-	strictEqual($.cookie('c'), '[object Object]', 'should write value');
-});
+// github.com/js-cookie/js-cookie/issues/196
+QUnit.test(
+  'Call to read cookie when there is another unrelated cookie with malformed encoding in the name',
+  function (assert) {
+    assert.expect(2)
+    document.cookie = '%A1=foo'
+    document.cookie = 'c=v'
+    assert.strictEqual(
+      Cookies.get('c'),
+      'v',
+      'should not throw a URI malformed exception when retrieving a single cookie'
+    )
+    assert.deepEqual(
+      Cookies.get(),
+      { c: 'v' },
+      'should not throw a URI malformed exception when retrieving all cookies'
+    )
+    document.cookie = '%A1=foo; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+  }
+)
 
-test('number', function () {
-	expect(1);
-	$.cookie('c', 1234);
-	strictEqual($.cookie('c'), '1234', 'should write value');
-});
+// github.com/js-cookie/js-cookie/pull/62
+QUnit.test(
+  'Call to read cookie when there is another unrelated cookie with malformed encoding in the value',
+  function (assert) {
+    assert.expect(2)
+    document.cookie = 'invalid=%A1'
+    document.cookie = 'c=v'
+    assert.strictEqual(
+      Cookies.get('c'),
+      'v',
+      'should not throw a URI malformed exception when retrieving a single cookie'
+    )
+    assert.deepEqual(
+      Cookies.get(),
+      { c: 'v' },
+      'should not throw a URI malformed exception when retrieving all cookies'
+    )
+    document.cookie = 'invalid=foo; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+  }
+)
 
-test('expires option as days from now', function () {
-	expect(1);
-	var sevenDaysFromNow = new Date();
-	sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
-	strictEqual($.cookie('c', 'v', { expires: 7 }), 'c=v; expires=' + sevenDaysFromNow.toUTCString(),
-		'should write the cookie string with expires');
-});
+// github.com/js-cookie/js-cookie/issues/145
+QUnit.test(
+  'Call to read cookie when passing an Object Literal as the second argument',
+  function (assert) {
+    assert.expect(1)
+    Cookies.get('name', { path: '' })
+    assert.strictEqual(document.cookie, '', 'should not create a cookie')
+  }
+)
 
-test('expires option as fraction of a day', function () {
-	expect(1);
+QUnit.test('Passing `undefined` first argument', function (assert) {
+  assert.expect(1)
+  Cookies.set('foo', 'bar')
+  assert.strictEqual(
+    Cookies.get(undefined),
+    undefined,
+    'should not attempt to retrieve all cookies'
+  )
+})
 
-	var now = new Date().getTime();
-	var expires = Date.parse($.cookie('c', 'v', { expires: 0.5 }).replace(/.+expires=/, ''));
+QUnit.test('Passing `null` first argument', function (assert) {
+  assert.expect(1)
+  Cookies.set('foo', 'bar')
+  assert.strictEqual(
+    Cookies.get(null),
+    undefined,
+    'should not attempt to retrieve all cookies'
+  )
+})
 
-	// When we were using Date.setDate() fractions have been ignored
-	// and expires resulted in the current date. Allow 1000 milliseconds
-	// difference for execution time.
-	ok(expires > now + 1000, 'should write expires attribute with the correct date');
-});
+QUnit.module('write', lifecycle)
 
-test('expires option as Date instance', function () {
-	expect(1);
-	var sevenDaysFromNow = new Date();
-	sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
-	strictEqual($.cookie('c', 'v', { expires: sevenDaysFromNow }), 'c=v; expires=' + sevenDaysFromNow.toUTCString(),
-		'should write the cookie string with expires');
-});
+QUnit.test('String primitive', function (assert) {
+  assert.expect(1)
+  Cookies.set('c', 'v')
+  assert.strictEqual(Cookies.get('c'), 'v', 'should write value')
+})
 
-test('return value', function () {
-	expect(1);
-	strictEqual($.cookie('c', 'v'), 'c=v', 'should return written cookie string');
-});
+QUnit.test('String object', function (assert) {
+  /* eslint-disable no-new-wrappers */
+  assert.expect(1)
+  Cookies.set('c', new String('v'))
+  assert.strictEqual(Cookies.get('c'), 'v', 'should write value')
+})
 
-test('defaults', function () {
-	expect(2);
-	$.cookie.defaults.path = '/foo';
-	ok($.cookie('c', 'v').match(/path=\/foo/), 'should use options from defaults');
-	ok($.cookie('c', 'v', { path: '/bar' }).match(/path=\/bar/), 'options argument has precedence');
-});
+QUnit.test('value "[object Object]"', function (assert) {
+  assert.expect(1)
+  Cookies.set('c', '[object Object]')
+  assert.strictEqual(Cookies.get('c'), '[object Object]', 'should write value')
+})
 
-test('raw = true', function () {
-	expect(1);
-	$.cookie.raw = true;
-	strictEqual($.cookie('c[1]', 'v[1]'), 'c[1]=v[1]', 'should not encode');
-	// Delete manually here because it requires raw === true...
-	$.removeCookie('c[1]');
-});
+QUnit.test('number', function (assert) {
+  assert.expect(1)
+  Cookies.set('c', 1234)
+  assert.strictEqual(Cookies.get('c'), '1234', 'should write value')
+})
 
-test('json = true', function () {
-	expect(1);
-	$.cookie.json = true;
+QUnit.test('null', function (assert) {
+  assert.expect(1)
+  Cookies.set('c', null)
+  assert.strictEqual(Cookies.get('c'), 'null', 'should write value')
+})
 
-	if ('JSON' in window) {
-		$.cookie('c', { foo: 'bar' });
-		strictEqual(document.cookie, 'c=' + encodeURIComponent(JSON.stringify({ foo: 'bar' })), 'should stringify JSON');
-	} else {
-		ok(true);
-	}
-});
+QUnit.test('undefined', function (assert) {
+  assert.expect(1)
+  Cookies.set('c', undefined)
+  assert.strictEqual(Cookies.get('c'), 'undefined', 'should write value')
+})
 
+QUnit.test('expires option as days from now', function (assert) {
+  assert.expect(1)
+  var days = 200
+  var expires = new Date(new Date().valueOf() + days * 24 * 60 * 60 * 1000)
+  var expected = 'expires=' + expires.toUTCString()
+  var actual = Cookies.set('c', 'v', { expires: days })
+  assert.ok(
+    actual.indexOf(expected) !== -1,
+    quoted(actual) + ' includes ' + quoted(expected)
+  )
+})
 
-module('removeCookie', lifecycle);
+// github.com/carhartl/jquery-cookie/issues/246
+QUnit.test('expires option as fraction of a day', function (assert) {
+  assert.expect(1)
 
-test('deletion', function () {
-	expect(1);
-	$.cookie('c', 'v');
-	$.removeCookie('c');
-	strictEqual(document.cookie, '', 'should delete the cookie');
-});
+  var findValueForAttributeName = function (createdCookie, attributeName) {
+    var pairs = createdCookie.split('; ')
+    var foundAttributeValue
+    pairs.forEach(function (pair) {
+      if (pair.split('=')[0] === attributeName) {
+        foundAttributeValue = pair.split('=')[1]
+      }
+    })
+    return foundAttributeValue
+  }
+  var now = new Date()
+  var stringifiedDate = findValueForAttributeName(
+    Cookies.set('c', 'v', { expires: 0.5 }),
+    'expires'
+  )
+  var expires = new Date(stringifiedDate)
 
-test('when sucessfully deleted', function () {
-	expect(1);
-	$.cookie('c', 'v');
-	strictEqual($.removeCookie('c'), true, 'returns true');
-});
+  // When we were using Date.setDate() fractions have been ignored
+  // and expires resulted in the current date. Allow 1000 milliseconds
+  // difference for execution time because new Date() can be different,
+  // even when it's run synchronously.
+  // See https://github.com/js-cookie/js-cookie/commit/ecb597b65e4c477baa2b30a2a5a67fdaee9870ea#commitcomment-20146048.
+  var assertion = expires.getTime() > now.getTime() + 1000
+  var message =
+    quoted(expires.getTime()) +
+    ' should be greater than ' +
+    quoted(now.getTime())
+  assert.ok(assertion, message)
+})
 
-test('when deletion failed', function () {
-	expect(1);
-	$.cookie('c', 'v');
+QUnit.test('expires option as Date instance', function (assert) {
+  assert.expect(1)
+  var sevenDaysFromNow = new Date()
+  sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7)
+  var expected = 'expires=' + sevenDaysFromNow.toUTCString()
+  var actual = Cookies.set('c', 'v', { expires: sevenDaysFromNow })
+  assert.ok(
+    actual.indexOf(expected) !== -1,
+    quoted(actual) + ' includes ' + quoted(expected)
+  )
+})
 
-	var originalCookie = $.cookie;
-	$.cookie = function () {
-		// Stub deletion...
-		if (arguments.length === 1) {
-			return originalCookie.apply(null, arguments);
-		}
-	};
+QUnit.test('return value', function (assert) {
+  assert.expect(1)
+  var expected = 'c=v'
+  var actual = Cookies.set('c', 'v').substring(0, expected.length)
+  assert.strictEqual(actual, expected, 'should return written cookie string')
+})
 
-	strictEqual($.removeCookie('c'), false, 'returns false');
+QUnit.test('predefined path attribute', function (assert) {
+  assert.expect(1)
+  assert.ok(
+    Cookies.set('c', 'v').match(/path=\/$/),
+    'should use root path when not configured otherwise'
+  )
+})
 
-	$.cookie = originalCookie;
-});
+QUnit.test('API for changing defaults', function (assert) {
+  assert.expect(3)
 
-test('when cookie does not exist', function () {
-	expect(1);
-	strictEqual($.removeCookie('c'), false, 'returns false');
-});
+  var api
 
-test('with options', function () {
-	expect(1);
-	var options = { path: '/' };
-	$.cookie('c', 'v', options);
-	$.removeCookie('c', options);
-	strictEqual(document.cookie, '', 'should delete the cookie');
-});
+  api = Cookies.withAttributes({ path: '/foo' })
+  assert.ok(
+    api.set('c', 'v').match(/path=\/foo/),
+    'should use attributes from defaults'
+  )
+  assert.ok(
+    api.set('c', 'v', { path: '/baz' }).match(/path=\/baz/),
+    'attributes argument has precedence'
+  )
 
-test('passing options reference', function () {
-	expect(1);
-	var options = { path: '/' };
-	$.cookie('c', 'v', options);
-	$.removeCookie('c', options);
-	deepEqual(options, { path: '/' }, "won't alter options object");
-});
+  api = Cookies.withAttributes({ path: undefined })
+  assert.notOk(api.set('c', 'v').match(/path=/), 'should not set any path')
 
-test('[] used in name', function () {
-	expect(1);
-	$.cookie.raw = true;
-	document.cookie = 'c[1]=foo';
-	$.removeCookie('c[1]');
-	strictEqual(document.cookie, '', 'delete the cookie');
-});
+  Cookies.remove('c')
+})
 
+QUnit.test('true secure value', function (assert) {
+  assert.expect(1)
+  var expected = 'c=v; path=/; secure'
+  var actual = Cookies.set('c', 'v', { secure: true })
+  assert.strictEqual(actual, expected, 'should add secure attribute')
+})
 
-module('conversion', lifecycle);
+// github.com/js-cookie/js-cookie/pull/54
+QUnit.test('false secure value', function (assert) {
+  assert.expect(1)
+  var expected = 'c=v; path=/'
+  var actual = Cookies.set('c', 'v', { secure: false })
+  assert.strictEqual(
+    actual,
+    expected,
+    'false should not modify path in cookie string'
+  )
+})
 
-test('read converter', function() {
-	expect(1);
-	$.cookie('c', '1');
-	strictEqual($.cookie('c', Number), 1, 'converts read value');
-});
+// github.com/js-cookie/js-cookie/issues/276
+QUnit.test('unofficial attribute', function (assert) {
+  assert.expect(1)
+  var expected = 'c=v; path=/; unofficial=anything'
+  var actual = Cookies.set('c', 'v', {
+    unofficial: 'anything'
+  })
+  assert.strictEqual(
+    expected,
+    actual,
+    'should write the cookie string with unofficial attribute'
+  )
+})
 
-test('read converter with raw = true', function() {
-	expect(1);
-	$.cookie.raw = true;
-	$.cookie('c', '1');
-	strictEqual($.cookie('c', Number), 1, 'does not decode, but converts read value');
-});
+QUnit.test('undefined attribute value', function (assert) {
+  assert.expect(5)
+  assert.strictEqual(
+    Cookies.set('c', 'v', {
+      expires: undefined
+    }),
+    'c=v; path=/',
+    'should not write undefined expires attribute'
+  )
+  assert.strictEqual(
+    Cookies.set('c', 'v', {
+      path: undefined
+    }),
+    'c=v',
+    'should not write undefined path attribute'
+  )
+  assert.strictEqual(
+    Cookies.set('c', 'v', {
+      domain: undefined
+    }),
+    'c=v; path=/',
+    'should not write undefined domain attribute'
+  )
+  assert.strictEqual(
+    Cookies.set('c', 'v', {
+      secure: undefined
+    }),
+    'c=v; path=/',
+    'should not write undefined secure attribute'
+  )
+  assert.strictEqual(
+    Cookies.set('c', 'v', {
+      unofficial: undefined
+    }),
+    'c=v; path=/',
+    'should not write undefined unofficial attribute'
+  )
+})
+
+// github.com/js-cookie/js-cookie/issues/396
+QUnit.test(
+  'sanitization of attributes to prevent XSS from untrusted input',
+  function (assert) {
+    assert.expect(1)
+    assert.strictEqual(
+      Cookies.set('c', 'v', {
+        path: '/;domain=sub.domain.com',
+        domain: 'site.com;remove_this',
+        customAttribute: 'value;;remove_this'
+      }),
+      'c=v; path=/; domain=site.com; customAttribute=value',
+      'should not allow semicolon in a cookie attribute'
+    )
+  }
+)
+
+QUnit.module('remove', lifecycle)
+
+QUnit.test('deletion', function (assert) {
+  assert.expect(1)
+  Cookies.set('c', 'v')
+  Cookies.remove('c')
+  assert.strictEqual(document.cookie, '', 'should delete the cookie')
+})
+
+QUnit.test('with attributes', function (assert) {
+  assert.expect(1)
+  var attributes = { path: '/' }
+  Cookies.set('c', 'v', attributes)
+  Cookies.remove('c', attributes)
+  assert.strictEqual(document.cookie, '', 'should delete the cookie')
+})
+
+QUnit.test('passing attributes reference', function (assert) {
+  assert.expect(1)
+  var attributes = { path: '/' }
+  Cookies.set('c', 'v', attributes)
+  Cookies.remove('c', attributes)
+  assert.deepEqual(attributes, { path: '/' }, "won't alter attributes object")
+})
+
+QUnit.module('converters', lifecycle)
+
+// github.com/carhartl/jquery-cookie/pull/166
+QUnit.test(
+  'provide a way for decoding characters encoded by the escape function',
+  function (assert) {
+    assert.expect(1)
+    document.cookie = 'c=%u5317%u4eac'
+    assert.strictEqual(
+      Cookies.withConverter({ read: unescape }).get('c'),
+      '北京',
+      'should convert chinese characters correctly'
+    )
+  }
+)
+
+QUnit.test(
+  'should decode a malformed char that matches the decodeURIComponent regex',
+  function (assert) {
+    assert.expect(1)
+    document.cookie = 'c=%E3'
+    var cookies = Cookies.withConverter({ read: unescape })
+    assert.strictEqual(
+      cookies.get('c'),
+      'ã',
+      'should convert the character correctly'
+    )
+    cookies.remove('c', {
+      path: ''
+    })
+  }
+)
+
+QUnit.test(
+  'should be able to conditionally decode a single malformed cookie',
+  function (assert) {
+    assert.expect(2)
+    var cookies = Cookies.withConverter({
+      read: function (value, name) {
+        if (name === 'escaped') {
+          return unescape(value)
+        }
+      }
+    })
+
+    document.cookie = 'escaped=%u5317'
+    assert.strictEqual(
+      cookies.get('escaped'),
+      '北',
+      'should use custom read converter when retrieving single cookies'
+    )
+
+    assert.deepEqual(
+      cookies.get(),
+      {
+        escaped: '北'
+      },
+      'should use custom read converter when retrieving all cookies'
+    )
+  }
+)
+
+// github.com/js-cookie/js-cookie/issues/70
+QUnit.test('should be able to create a write decoder', function (assert) {
+  assert.expect(1)
+  Cookies.withConverter({
+    write: function (value) {
+      return value.replace('+', '%2B')
+    }
+  }).set('c', '+')
+  assert.strictEqual(
+    document.cookie,
+    'c=%2B',
+    'should call the write converter'
+  )
+})
+
+QUnit.test('should be able to use read and write decoder', function (assert) {
+  assert.expect(1)
+  document.cookie = 'c=%2B'
+  var cookies = Cookies.withConverter({
+    read: function (value) {
+      return value.replace('%2B', '+')
+    }
+  })
+  assert.strictEqual(cookies.get('c'), '+', 'should call the read converter')
+})
+
+QUnit.test('should expose rfc 6265 converter', function (assert) {
+  assert.expect(2)
+  assert.ok(
+    !!Cookies.converter.read,
+    'rfc 6265 converter read method is exposed'
+  )
+  assert.ok(
+    !!Cookies.converter.write,
+    'rfc 6265 converter write method is exposed'
+  )
+})
+
+QUnit.test('should be able to reuse and extend read decoder', function (assert) {
+  assert.expect(1)
+  document.cookie = 'c=A%23'
+  var cookies = Cookies.withConverter({
+    read: function (value) {
+      var decoded = value.replace('A', 'a')
+      return Cookies.converter.read(decoded)
+    }
+  })
+  assert.strictEqual(cookies.get('c'), 'a#', 'should call both read converters')
+})
+
+QUnit.test('should be able to reuse and extend a write decoder', function (
+  assert
+) {
+  assert.expect(1)
+  Cookies.withConverter({
+    write: function (value) {
+      var encoded = value.replace('a', 'A')
+      return Cookies.converter.write(encoded)
+    }
+  }).set('c', 'a%')
+  assert.strictEqual(
+    document.cookie,
+    'c=A%25',
+    'should call both write converters'
+  )
+})
+
+QUnit.module('noConflict', lifecycle)
+
+QUnit.test('do not conflict with existent globals', function (assert) {
+  assert.expect(2)
+  var Cookies = window.Cookies.noConflict()
+  Cookies.set('c', 'v')
+  assert.strictEqual(Cookies.get('c'), 'v', 'should work correctly')
+  assert.strictEqual(
+    window.Cookies,
+    'existent global',
+    'should restore the original global'
+  )
+  window.Cookies = Cookies
+})
