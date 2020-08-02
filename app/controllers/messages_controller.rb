@@ -7,5 +7,8 @@ class MessagesController < ApplicationController
 
 
   end
+  def new
+  end
+  
 
 end
