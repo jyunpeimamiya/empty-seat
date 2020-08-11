@@ -1,14 +1,14 @@
-$( function() {
-  $('#tweive' ).click( function () {
-    document.cookie = 'hoge=1';
-  )}
+// $( function() {
+//   $('#tweive' ).click( function () {
+//     document.cookie = 'hoge=1';
+//   )}
   
    
 
-  window.onload = function Color() {
-    $('#tweive').css("color","red");
-  }
-    )};
+//   window.onload = function Color() {
+//     $('#tweive').css("color","red");
+//   }
+//     )};
     
      
 
